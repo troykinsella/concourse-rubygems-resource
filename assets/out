@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+set -e
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+source $(dirname $0)/common.sh
+
+source=$1
+if [ -z "$source" ]; then
+  echo "usage: $0 <path/to/source>" >&2
+  exit 1
+fi
+
+payload=$(mktemp /tmp/rubygems.XXXXXX)
+cat > $payload <&0
+
+gem_name=$(attr source gem_name)
+gem_dir=$(attr params gem_dir)
+
+extract_version() {
+  local file=$1
+  gem spec $file version | fgrep 'version:' | awk '{print $2}'
+}
+
+find_gem_file() {
+  find . -name '*.gem' | egrep "${gem_name}-[0-9]+\.[0-9]+\.[0-9]+(\.[0-9a-zA-Z\-_~])?\.gem"
+}
+
+key_option() {
+  local key_name=$(jq -r '.params.key_name // ""' < $payload)
+  if [ -n "$key_name" ]; then
+    echo "--key $key_name"
+  fi
+}
+
+cd $source/$gem_dir
+
+gem_file=$(find_gem_file)
+test -z "$gem_file" && { echo "No gem file found" >&2; exit 1; }
+
+version=$(extract_version $gem_file)
+
+echo "Publishing $gem_file"
+
+gem push $gem_file \
+  $(source_option "--host") \
+  $(key_option);
+
+jq -n "{
+  version: {
+    number: \"$version\"
+  }
+}" >&3

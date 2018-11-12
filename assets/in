@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -e
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+source $(dirname $0)/common.sh
+
+destination=$1
+
+if [ -z "$destination" ]; then
+  echo "usage: $0 <path/to/destination>" >&2
+  exit 1
+fi
+
+payload=$(mktemp /tmp/rubygems.XXXXXX)
+cat > $payload <&0
+
+gem_name=$(attr source gem_name)
+version=$(jq -r '.version.number // ""' < $payload)
+install_options=$(jq -r '.params.install_options // ""' < $payload)
+skip_download=$(jq -r '.params.skip_download // false' < $payload)
+
+if [ "$skip_download" = "true" ]; then
+  echo "Skipping download"
+  exit
+fi
+
+gem install $gem_name \
+  --remote \
+  --version $version \
+  $(source_option) \
+  $(prerelease_option) \
+  --install-dir $destination \
+  $install_options;
