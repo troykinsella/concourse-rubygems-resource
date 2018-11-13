@@ -34,3 +34,7 @@ gem install $gem_name \
   $(prerelease_option) \
   --install-dir $destination \
   $install_options;
+
+jq -n "{
+  version: { number: $(echo $version | jq -R .)}
+}" >&3
