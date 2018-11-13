@@ -44,7 +44,7 @@ version=$(extract_version $gem_file)
 
 configure_credentials
 
-echo "Publishing $gem_file"
+echo "Publishing $(basename $gem_file)"
 
 gem push $gem_file \
   $(source_option "--host") \
