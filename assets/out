@@ -25,7 +25,11 @@ extract_version() {
 }
 
 find_gem_file() {
-  find . -name '*.gem' | egrep "${gem_name}-[0-9]+\.[0-9]+\.[0-9]+(\.[0-9a-zA-Z\-_~])?\.gem"
+  local gem_regex=$(jq -r '.params.gem_regex // ""' < $payload)
+  if [ -z "$gem_regex" ]; then
+      gem_regex="${gem_name}-[0-9]+\.[0-9]+\.[0-9]+(\..*)?\.gem"
+  fi
+  find . -name '*.gem' | egrep "$gem_regex"
 }
 
 key_option() {

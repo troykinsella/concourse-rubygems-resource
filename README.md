@@ -74,6 +74,7 @@ Publishes a RubyGem file to a repository using `gem push`.
 ### Parameters
 
 * `gem_dir`: Required. The directory in which the built RubyGem file is located.
+* `gem_regex`: Optional. A RegEx that can match the RubyGem file name to publish.
 * `key_name`: Optional. The name of the API key in `~/.gem/credentials` to use.
 
 ### Example
