@@ -27,6 +27,8 @@ if [ "$skip_download" = "true" ]; then
   exit
 fi
 
+configure_credentials
+
 gem install $gem_name \
   --remote \
   --version $version \

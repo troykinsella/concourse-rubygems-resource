@@ -42,6 +42,8 @@ test -z "$gem_file" && { echo "No gem file found" >&2; exit 1; }
 
 version=$(extract_version $gem_file)
 
+configure_credentials
+
 echo "Publishing $gem_file"
 
 gem push $gem_file \
