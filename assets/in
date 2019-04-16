@@ -25,13 +25,15 @@ add_apt_keys() {
 }
 
 configure_apt_sources() {
-  printf '' > /etc/apt/sources.list
   local sources=$(jq -r '.source.apt_sources // []' < $payload)
-  IFS=$'\n'
-  for s in $(echo "$sources" | jq -r '.[]'); do
-    echo $s >> /etc/apt/sources.list
-  done
-  unset IFS
+  if [ -n "$sources" ]; then
+    printf '' > /etc/apt/sources.list
+    IFS=$'\n'
+    for s in $(echo "$sources" | jq -r '.[]'); do
+      echo $s >> /etc/apt/sources.list
+    done
+    unset IFS
+  fi
 }
 
 update_apt_if_needed() {
