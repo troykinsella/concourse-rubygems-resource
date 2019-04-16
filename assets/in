@@ -26,7 +26,7 @@ add_apt_keys() {
 
 configure_apt_sources() {
   local sources=$(jq -r '.source.apt_sources // []' < $payload)
-  if [ -n "$sources" ]; then
+  if [ "$sources" != "[]" ]; then
     printf '' > /etc/apt/sources.list
     IFS=$'\n'
     for s in $(echo "$sources" | jq -r '.[]'); do
@@ -40,7 +40,6 @@ update_apt_if_needed() {
   local sources=$(jq -r '.source.apt_sources // ""' < $payload)
   local packages=$(jq -r '.source.deb_packages // ""' < $payload)
   if [ -n "$sources" ] || [ -n "$packages" ]; then
-    cat /etc/apt/sources.list
     apt-get update -y
   fi
 }
