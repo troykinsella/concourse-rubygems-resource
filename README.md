@@ -36,6 +36,8 @@ resources:
     gem_name: wickedizer
     credentials: |
       :rubygems_api_key: Basic fKtpr1kRTNBdn...V3aVdZTTlhFUmpTdno=
+    deb_packages:
+    - whacky-dev
 ```
 
 ## Behaviour
@@ -85,12 +87,6 @@ Publishes a RubyGem file to a repository using `gem push`.
 
 ```yaml
 jobs:
-- name: install gem
-  plan:
-  - get: gem
-    params:
-      deb_packages:
-      - whacky-dev
 - name: publish-gem
   plan:
   - task: build gem
