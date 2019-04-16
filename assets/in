@@ -14,6 +14,45 @@ if [ -z "$destination" ]; then
   exit 1
 fi
 
+add_apt_keys() {
+  local apt_keys=$(jq -r '.source.apt_keys // []' < $payload)
+  IFS=$'\n'
+  for k in $(echo "$apt_keys" | jq -r '.[]'); do
+    echo $k
+    curl -fSsL $k | apt-key add -; \
+  done
+  unset IFS
+}
+
+configure_apt_sources() {
+  printf '' > /etc/apt/sources.list
+  local sources=$(jq -r '.source.apt_sources // []' < $payload)
+  IFS=$'\n'
+  for s in $(echo "$sources" | jq -r '.[]'); do
+    echo $s >> /etc/apt/sources.list
+  done
+  unset IFS
+}
+
+update_apt_if_needed() {
+  local sources=$(jq -r '.source.apt_sources // []' < $payload)
+  local packages=$(jq -r '.source.deb_packages // []' < $payload)
+  if [ -n "$sources" ] || [ -n "$packages" ]; then
+    rm -rf /var/cache/apt/archives/*
+    rm -rf /var/lib/apt/lists/*
+    apt-get update -y
+  fi
+}
+
+install_packages() {
+  local packages=$(jq -r '.source.deb_packages // []' < $payload)
+  IFS=$'\n'
+  for p in $(echo "$packages" | jq -r '.[]'); do
+    apt-get install -y $p
+  done
+  unset IFS
+}
+
 payload=$(mktemp /tmp/rubygems.XXXXXX)
 cat > $payload <&0
 
@@ -24,18 +63,21 @@ skip_download=$(jq -r '.params.skip_download // false' < $payload)
 
 if [ "$skip_download" = "true" ]; then
   echo "Skipping download"
-  exit
+else
+  add_apt_keys
+  configure_apt_sources
+  update_apt_if_needed
+  install_packages
+  configure_credentials
+
+  gem install $gem_name \
+    --remote \
+    --version $version \
+    $(source_option) \
+    $(prerelease_option) \
+    --install-dir $destination \
+    $install_options;
 fi
-
-configure_credentials
-
-gem install $gem_name \
-  --remote \
-  --version $version \
-  $(source_option) \
-  $(prerelease_option) \
-  --install-dir $destination \
-  $install_options;
 
 jq -n "{
   version: { number: $(echo $version | jq -R .)}

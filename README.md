@@ -20,6 +20,10 @@ resource_types:
 * `prerelease`: Optional. Default: `false`. `true` to include prerelease versions in checks and gets.
 * `source_url`: Optional. The URL of the RubyGem host. Unless specified, 
   this resource operates on the default RubyGem host: `https://rubygems.org`.
+* `apt_keys`: Optional. During `get`s, add this list of apt keys. Each entry is a URL at which the apt key can be fetched. 
+* `apt_sources`: Optional. During `get`s, configure this list of apt sources. Each entry is a line in the `/etc/apt/sources.list` file.
+* `deb_packages`: Optional. During `get`s, install this list of deb packages prior to installing the gem.
+  Useful for when the gem requires native extensions.
 
 ### Example
 
@@ -81,6 +85,12 @@ Publishes a RubyGem file to a repository using `gem push`.
 
 ```yaml
 jobs:
+- name: install gem
+  plan:
+  - get: gem
+    params:
+      deb_packages:
+      - whacky-dev
 - name: publish-gem
   plan:
   - task: build gem
