@@ -48,6 +48,13 @@ version=$(extract_version $gem_file)
 
 configure_credentials
 
+if [ -n "$(gem search "$gem_name" -r -q -a | grep "$version")" ]
+then
+  echo "${gem_name}:${version} already published." >&2
+  jq -n "{ version: { number: \"$version\" } }" >&3
+  exit 0;
+fi
+
 echo "Publishing $(basename $gem_file)"
 
 gem push $gem_file \
